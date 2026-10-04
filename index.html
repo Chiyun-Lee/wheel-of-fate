@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wheel of Fate</title>
+  <meta name="theme-color" content="#0a0a0a">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+
+  <!-- iOS home-screen app -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Fate">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Wheel of Fate</h1>
+
+    <form id="add-form">
+      <input id="add-input" placeholder="Add an option" autocomplete="off" required>
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="items"></ul>
+
+    <footer>
+      <button id="export-btn" type="button">Export backup</button>
+      <label class="button">
+        Import backup
+        <input id="import-input" type="file" accept="application/json" hidden>
+      </label>
+      <p id="status"></p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,69 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --surface: #1f1f1f;
+  --accent: #fafafa;
+  --text: #fafafa;
+  --muted: #8a8a8a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+main {
+  max-width: 32rem;
+  margin: 0 auto;
+  /* respect the notch / home indicator in standalone mode */
+  padding: calc(env(safe-area-inset-top) + 1rem) 1rem calc(env(safe-area-inset-bottom) + 1rem);
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 1rem; }
+
+form { display: flex; gap: 0.5rem; }
+
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem; /* >=16px prevents iOS zoom on focus */
+}
+
+button, .button {
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: var(--accent);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+ul { list-style: none; padding: 0; margin: 1rem 0; }
+
+li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.4rem;
+  border-radius: 0.6rem;
+  background: var(--surface);
+}
+
+li button { background: transparent; color: var(--muted); padding: 0.2rem 0.5rem; }
+
+footer { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+footer button, footer .button { background: var(--surface); color: var(--text); }
+#status { flex-basis: 100%; color: var(--muted); font-size: 0.85rem; margin: 0; }
