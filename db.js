@@ -1,13 +1,12 @@
 // Small promise wrapper around IndexedDB.
 //
 // When the app is installed to the iOS home screen it gets its own storage
-// partition, separate from Safari's. That data survives app restarts and
-// reboots, but is deleted if the app is removed from the home screen —
-// hence the export/import helpers below.
+// partition, separate from Safari's. That data survives app restarts,
+// reboots and app updates, but is deleted if the app is removed from the
+// home screen.
 
 const DB_NAME = 'wheel-of-fate';
-const DB_VERSION = 1;
-const STORES = ['items'];
+const DB_VERSION = 2;
 
 let dbPromise;
 
@@ -19,6 +18,9 @@ function open() {
       // Add new stores / indexes here and bump DB_VERSION.
       if (!db.objectStoreNames.contains('items')) {
         db.createObjectStore('items', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings');
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -40,26 +42,11 @@ async function run(store, mode, fn) {
 
 export const getAll = (store) => run(store, 'readonly', (s) => s.getAll());
 export const get = (store, key) => run(store, 'readonly', (s) => s.get(key));
-export const put = (store, value) => run(store, 'readwrite', (s) => s.put(value));
+export const put = (store, value, key) => run(store, 'readwrite', (s) => s.put(value, key));
 export const remove = (store, key) => run(store, 'readwrite', (s) => s.delete(key));
-export const clear = (store) => run(store, 'readwrite', (s) => s.clear());
 
 // Ask the browser not to evict our data under storage pressure.
 export async function requestPersistence() {
   if (!navigator.storage?.persist) return false;
   return (await navigator.storage.persisted()) || navigator.storage.persist();
-}
-
-export async function exportAll() {
-  const data = {};
-  for (const store of STORES) data[store] = await getAll(store);
-  return { app: DB_NAME, version: DB_VERSION, exportedAt: new Date().toISOString(), data };
-}
-
-export async function importAll(backup) {
-  if (backup?.app !== DB_NAME) throw new Error('Not a Wheel of Fate backup');
-  for (const store of STORES) {
-    await clear(store);
-    for (const value of backup.data[store] ?? []) await put(store, value);
-  }
 }

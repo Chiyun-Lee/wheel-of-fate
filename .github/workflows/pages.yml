@@ -25,7 +25,8 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp -r index.html styles.css app.js db.js sw.js manifest.webmanifest icons _site/
+          cp -r index.html styles.css app.js wheel.js db.js sw.js pattern.svg manifest.webmanifest icons _site/
+          echo "{\"version\":\"$GITHUB_SHA\"}" > _site/version.json
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

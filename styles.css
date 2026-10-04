@@ -1,69 +1,203 @@
 :root {
-  color-scheme: dark;
-  --bg: #0a0a0a;
-  --surface: #1f1f1f;
-  --accent: #fafafa;
-  --text: #fafafa;
-  --muted: #8a8a8a;
+  color-scheme: light;
+  --bg: #ffffff;
+  --ink: #111111;
+  --soft: #8a8a88;
+  --line: rgba(0, 0, 0, 0.1);
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 17px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  color: var(--ink);
+  font: 300 15px/1.4 var(--mono);
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-main {
-  max-width: 32rem;
-  margin: 0 auto;
-  /* respect the notch / home indicator in standalone mode */
-  padding: calc(env(safe-area-inset-top) + 1rem) 1rem calc(env(safe-area-inset-bottom) + 1rem);
+body {
+  background: var(--bg);
 }
 
-h1 { font-size: 1.6rem; margin: 0 0 1rem; }
+/* the flow-poles pattern, kept barely there */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("pattern.svg") center / cover no-repeat;
+  opacity: 0.09;
+  pointer-events: none;
+}
 
-form { display: flex; gap: 0.5rem; }
-
-input {
-  flex: 1;
-  min-width: 0;
-  padding: 0.7rem;
+button {
   border: 0;
-  border-radius: 0.6rem;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 1rem; /* >=16px prevents iOS zoom on focus */
-}
-
-button, .button {
-  padding: 0.7rem 1rem;
-  border: 0;
-  border-radius: 0.6rem;
-  background: var(--accent);
-  color: var(--bg);
+  background: none;
+  color: inherit;
   font: inherit;
-  font-weight: 600;
+  padding: 0;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
-ul { list-style: none; padding: 0; margin: 1rem 0; }
+#wheel {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
 
-li {
+footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 1rem calc(env(safe-area-inset-bottom) + 1.25rem);
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.4rem;
-  border-radius: 0.6rem;
-  background: var(--surface);
 }
 
-li button { background: transparent; color: var(--muted); padding: 0.2rem 0.5rem; }
+h1 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.45em;
+  text-transform: lowercase;
+  /* letter-spacing trails the last glyph; balance it so the title stays centred */
+  padding-left: 0.45em;
+}
 
-footer { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
-footer button, footer .button { background: var(--surface); color: var(--text); }
-#status { flex-basis: 100%; color: var(--muted); font-size: 0.85rem; margin: 0; }
+#settings-btn {
+  position: absolute;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom) + 0.85rem);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  opacity: 0.7;
+  transition: transform 0.6s cubic-bezier(.2, .8, .2, 1), opacity 0.3s;
+}
+#settings-btn[aria-expanded="true"] { transform: rotate(90deg); opacity: 1; }
+
+/* ---------- settings ---------- */
+
+body.settings-open #wheel { opacity: 0; pointer-events: none; }
+#wheel, #settings { transition: opacity 0.4s ease; }
+
+#settings {
+  position: fixed;
+  inset: 0;
+  bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+  padding: calc(env(safe-area-inset-top) + 1.5rem) 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+#settings[hidden] { display: flex; opacity: 0; pointer-events: none; }
+
+.panel {
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+h2 {
+  margin: 0 0 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  color: var(--soft);
+}
+
+.scale { display: flex; justify-content: space-between; }
+.scale button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  transition: background 0.25s, color 0.25s;
+}
+.scale button[aria-checked="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.options-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#add-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0.5rem 0 0.7rem;
+  background: none;
+  color: var(--ink);
+  font: 300 16px var(--mono); /* >=16px prevents iOS zoom on focus */
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+#add-input::placeholder { color: var(--soft); }
+
+.columns, #options li {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem 5.5rem 1.75rem;
+  align-items: center;
+  gap: 0.25rem;
+}
+.columns {
+  padding: 0.75rem 0 0.25rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--soft);
+  text-align: center;
+}
+
+#options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#options li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+  transition: opacity 0.3s;
+}
+#options li.out { opacity: 0.35; } /* above max effort: not on the wheel */
+
+#options .label {
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: 300 15px var(--mono);
+  color: var(--ink);
+  padding: 0.4rem 0;
+  outline: none;
+  text-overflow: ellipsis;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.stepper { display: flex; align-items: center; justify-content: center; }
+.stepper button { width: 1.9rem; height: 2.2rem; color: var(--soft); font-size: 1.05rem; }
+.stepper button:disabled { opacity: 0.25; }
+.stepper output { width: 1.2rem; text-align: center; }
+
+.delete { color: var(--soft); height: 2.2rem; font-size: 0.9rem; }
+
+.empty { color: var(--soft); text-align: center; padding: 2rem 0; font-size: 0.85rem; }
