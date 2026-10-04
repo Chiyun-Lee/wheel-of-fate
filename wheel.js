@@ -12,8 +12,11 @@ const TAU_S = 2.4;
 const DECEL = 0.35;
 const MAX_V = 22;
 const STOP_V = 0.03;
+const TAP_SLOP = 8; // px a finger may drift and still count as a tap
 
-export function createWheel(canvas) {
+// onTap(label): a slice was tapped while the wheel was at rest.
+// onSpin(): the wheel started moving.
+export function createWheel(canvas, { onTap, onSpin } = {}) {
   const ctx = canvas.getContext('2d');
   const ticker = createTicker();
 
@@ -21,7 +24,7 @@ export function createWheel(canvas) {
   let w = 0, h = 0, cx = 0, cy = 0, R = 0;
   let rot = 0;           // wheel rotation (rad, clockwise)
   let vel = 0;           // rad/s while coasting
-  let drag = null;       // { lastAngle, samples: [{t, rot}] }
+  let drag = null;       // { x, y, t, wasResting, moved, lastAngle, samples: [{t, rot}] }
   let lastIndex = null;
   let settled = 1;       // 0..1 highlight of the slice under the pointer
   let raf = 0, lastFrame = 0;
@@ -169,14 +172,25 @@ export function createWheel(canvas) {
     if (!slices.length || Math.hypot(e.clientX - cx, e.clientY - cy) > R) return;
     ticker.unlock();
     canvas.setPointerCapture(e.pointerId);
-    vel = 0;
-    settled = 0;
-    drag = { lastAngle: angleOf(e), samples: [{ t: e.timeStamp, rot }] };
-    draw();
+    const wasResting = vel === 0;
+    if (!wasResting) {
+      vel = 0; // grabbing a coasting wheel stops it
+      onSpin?.();
+    }
+    drag = {
+      x: e.clientX, y: e.clientY, t: e.timeStamp, wasResting, moved: false,
+      lastAngle: angleOf(e), samples: [{ t: e.timeStamp, rot }],
+    };
   });
 
   canvas.addEventListener('pointermove', (e) => {
     if (!drag) return;
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < TAP_SLOP) return;
+      drag.moved = true;
+      settled = 0;
+      onSpin?.();
+    }
     const a = angleOf(e);
     let d = a - drag.lastAngle;
     if (d > Math.PI) d -= TAU;
@@ -191,6 +205,16 @@ export function createWheel(canvas) {
 
   function release(e) {
     if (!drag) return;
+    if (!drag.moved) {
+      const isTap = drag.wasResting && e.type === 'pointerup' && e.timeStamp - drag.t < 500;
+      if (isTap) {
+        const i = Math.floor((((angleOf(e) - rot) % TAU) + TAU) % TAU / unit()) % slices.length;
+        if (slices[i]) onTap?.(slices[i]);
+      }
+      drag = null;
+      animate();
+      return;
+    }
     const s = drag.samples;
     const first = s[0], last = s[s.length - 1];
     const dt = (last.t - first.t) / 1000;

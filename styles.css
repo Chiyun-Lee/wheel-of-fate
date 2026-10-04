@@ -92,6 +92,25 @@ h1 {
 body.settings-open #wheel { opacity: 0; pointer-events: none; }
 #wheel, #settings { transition: opacity 0.4s ease; }
 
+/* full text of a tapped slice, just below the wheel */
+#reveal {
+  position: fixed;
+  left: 2rem;
+  right: 2rem;
+  top: calc(50% + 2.5rem);
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+#reveal.shown { opacity: 1; transform: none; }
+body.settings-open #reveal { opacity: 0; }
+
 #settings {
   position: fixed;
   inset: 0;
@@ -199,5 +218,15 @@ h2 {
 .stepper output { width: 1.2rem; text-align: center; }
 
 .delete { color: var(--soft); height: 2.2rem; font-size: 0.9rem; }
+
+.backup {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--soft);
+}
+.backup button, .backup label { padding: 0.5rem 0; cursor: pointer; }
 
 .empty { color: var(--soft); text-align: center; padding: 2rem 0; font-size: 0.85rem; }

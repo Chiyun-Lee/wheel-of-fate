@@ -5,13 +5,33 @@ const MIN = 1, MAX = 5;
 const MIN_SLICES = 24; // repeat options until the wheel has at least this many slices
 
 const $ = (sel) => document.querySelector(sel);
-const wheel = createWheel($('#wheel'));
+const reveal = $('#reveal');
+const wheel = createWheel($('#wheel'), {
+  // tap a slice to read its full text; tap it again (or spin) to let it go
+  onTap(label) {
+    const same = reveal.classList.contains('shown') && reveal.textContent === label;
+    reveal.textContent = label;
+    reveal.classList.toggle('shown', !same);
+  },
+  onSpin() {
+    reveal.classList.remove('shown');
+  },
+});
 const settingsBtn = $('#settings-btn');
 const settings = $('#settings');
 const list = $('#options');
 
 let items = [];
 let maxEffort = MAX;
+
+const clamp = (n) => Math.min(MAX, Math.max(MIN, Number(n) || MIN));
+const normalize = (it) => ({
+  id: it.id ?? crypto.randomUUID(),
+  label: String(it.label ?? '').trim() || '—',
+  effort: clamp(it.effort),
+  weight: clamp(it.weight),
+  createdAt: Number.isFinite(it.createdAt) ? it.createdAt : Date.now(),
+});
 
 // ---------- wheel slices ----------
 
@@ -149,6 +169,48 @@ $('#add-form').addEventListener('submit', async (e) => {
   list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
+// ---------- backup ----------
+// Data survives app updates, but not removing the app from the home screen.
+
+$('#export-btn').addEventListener('click', async () => {
+  const backup = { app: 'wheel-of-fate', exportedAt: new Date().toISOString(), maxEffort, items };
+  const name = `wheel-of-fate-${backup.exportedAt.slice(0, 10)}.json`;
+  const file = new File([JSON.stringify(backup, null, 2)], name, { type: 'application/json' });
+  // On iOS the share sheet is the way to save a file (Save to Files, AirDrop…)
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); } catch { /* cancelled */ }
+  } else {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(file), download: name });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+});
+
+$('#import-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  let backup;
+  try {
+    backup = JSON.parse(await file.text());
+    if (backup?.app !== 'wheel-of-fate' || !Array.isArray(backup.items)) throw new Error();
+  } catch {
+    alert('That file isn’t a Wheel of Fate backup.');
+    return;
+  }
+  const n = backup.items.length;
+  if (!confirm(`Replace your current options with the ${n} in this backup?`)) return;
+
+  await db.clear('items');
+  items = backup.items.map(normalize).sort((a, b) => a.createdAt - b.createdAt);
+  for (const item of items) await db.put('items', item);
+  maxEffort = clamp(backup.maxEffort ?? MAX);
+  await db.put('settings', maxEffort, 'maxEffort');
+  renderMaxEffort();
+  renderOptions();
+  refreshWheel();
+});
+
 settingsBtn.addEventListener('click', () => {
   const open = settings.hidden;
   settings.hidden = !open;
@@ -159,11 +221,7 @@ settingsBtn.addEventListener('click', () => {
 
 // ---------- startup ----------
 
-const clamp = (n) => Math.min(MAX, Math.max(MIN, Number(n) || MIN));
-
-items = (await db.getAll('items'))
-  .map((it) => ({ ...it, effort: clamp(it.effort), weight: clamp(it.weight) }))
-  .sort((a, b) => a.createdAt - b.createdAt);
+items = (await db.getAll('items')).map(normalize).sort((a, b) => a.createdAt - b.createdAt);
 maxEffort = clamp((await db.get('settings', 'maxEffort')) ?? MAX);
 
 renderMaxEffort();

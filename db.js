@@ -3,7 +3,7 @@
 // When the app is installed to the iOS home screen it gets its own storage
 // partition, separate from Safari's. That data survives app restarts,
 // reboots and app updates, but is deleted if the app is removed from the
-// home screen.
+// home screen — hence the export/import backup in settings.
 
 const DB_NAME = 'wheel-of-fate';
 const DB_VERSION = 2;
@@ -44,6 +44,7 @@ export const getAll = (store) => run(store, 'readonly', (s) => s.getAll());
 export const get = (store, key) => run(store, 'readonly', (s) => s.get(key));
 export const put = (store, value, key) => run(store, 'readwrite', (s) => s.put(value, key));
 export const remove = (store, key) => run(store, 'readwrite', (s) => s.delete(key));
+export const clear = (store) => run(store, 'readwrite', (s) => s.clear());
 
 // Ask the browser not to evict our data under storage pressure.
 export async function requestPersistence() {

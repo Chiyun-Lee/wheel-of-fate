@@ -20,7 +20,8 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <canvas id="wheel" aria-label="Wheel of fate. Drag to spin."></canvas>
+  <canvas id="wheel" aria-label="Wheel of fate. Drag to spin, tap a slice to read it."></canvas>
+  <p id="reveal" aria-live="polite"></p>
 
   <section id="settings" hidden>
     <div class="panel effort-panel">
@@ -34,6 +35,14 @@
       </form>
       <div class="columns" aria-hidden="true"><span></span><span>effort</span><span>weight</span><span></span></div>
       <ul id="options"></ul>
+    </div>
+
+    <div class="backup">
+      <button id="export-btn" type="button">export backup</button>
+      <label>
+        import backup
+        <input id="import-input" type="file" accept="application/json,.json" hidden>
+      </label>
     </div>
   </section>
 
